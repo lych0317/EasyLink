@@ -3,6 +3,10 @@ package com.easylink.android;
 //import java.net.DatagramPacket;
 //import java.net.DatagramSocket;
 //import java.net.InetAddress;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -38,11 +42,12 @@ import android.widget.TextView;
 
 import com.easylink.android.utils.EasyLinkConstants;
 import com.easylink.android.utils.EasyLinkDialogManager;
-import com.easylink.android.utils.EasyLinkWifiManager;
 import com.easylink.android.utils.EasyLinkUtils;
+import com.easylink.android.utils.EasyLinkWifiManager;
 
-public class EasyLinkConfigActivity extends Activity implements OnClickListener,
-		FirstTimeConfigListener, OnCheckedChangeListener, TextWatcher {
+public class EasyLinkConfigActivity extends Activity implements
+		OnClickListener, FirstTimeConfigListener, OnCheckedChangeListener,
+		TextWatcher {
 	/**
 	 * Wifi Manager instance which gives the network related information like
 	 * Wifi ,SSID etc.
@@ -56,6 +61,12 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 	 * with the smartConfig.jar library
 	 */
 	private Button mSendDataPackets = null;
+
+	private Button mSearchButton = null;
+
+	private Button mSendButton = null;
+
+	private TextView mSearchShowTextView = null;
 
 	private EditText mSSIDInputField = null;
 
@@ -113,7 +124,7 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 	 */
 	public boolean isNetworkConnecting = false;
 
-//	private boolean flag = true;
+	// private boolean flag = true;
 
 	/**
 	 * Dialog ID to tigger no network dialog
@@ -127,7 +138,8 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 		/**
 		 * Disable orientation if launched in mobile
 		 */
-		EasyLinkUtils.setProtraitOrientationEnabled(EasyLinkConfigActivity.this);
+		EasyLinkUtils
+				.setProtraitOrientationEnabled(EasyLinkConfigActivity.this);
 
 		setContentView(R.layout.configration);
 
@@ -214,7 +226,8 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 
 		if (!(getWiFiManagerInstance().isWifiConnected())) {
 			sIsNetworkAlertVisible = true;
-			mDialogManager = new EasyLinkDialogManager(EasyLinkConfigActivity.this);
+			mDialogManager = new EasyLinkDialogManager(
+					EasyLinkConfigActivity.this);
 			showDialog(NO_NETWORK_DIALOG_ID);
 			return false;
 			// Do stuff when wifi not there.. disable start button.
@@ -229,6 +242,9 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 	 */
 	private void initViews() {
 		mSendDataPackets = (Button) findViewById(R.id.config_start_button);
+		mSearchButton = (Button) findViewById(R.id.config_search_button);
+		mSendButton = (Button) findViewById(R.id.config_send_button);
+		mSearchShowTextView = (TextView) findViewById(R.id.config_search_show_label);
 		footerView = (RelativeLayout) findViewById(R.id.config_footerview);
 		mSSIDInputField = (EditText) findViewById(R.id.config_ssid_input);
 		mPasswordInputField = (EditText) findViewById(R.id.config_passwd_input);
@@ -252,6 +268,8 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 	 */
 	private void setViewClickListeners() {
 		mSendDataPackets.setOnClickListener(this);
+		mSearchButton.setOnClickListener(this);
+		mSendButton.setOnClickListener(this);
 		footerView.setOnClickListener(this);
 	}
 
@@ -270,7 +288,103 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 				}
 			}
 			break;
+		case R.id.config_search_button:
+			if (checkNetwork("bUTTON")) {
+				try {
+					searchDeviceBySendPacketData();
+				} catch (Exception e) {
+					System.out.println("error show");
+					e.printStackTrace();
+				}
+			}
+			break;
+		case R.id.config_send_button:
+			if (checkNetwork("bUTTON")) {
+				try {
+					sendMidiData();
+				} catch (Exception e) {
+					System.out.println("error show");
+					e.printStackTrace();
+				}
+			}
+			break;
 		}
+	}
+
+	private void sendMidiData() throws Exception {
+		Thread sendMidiThread = new Thread(new Runnable() {
+			public void run() {
+				try {
+					sendMidiDataInBackground();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		sendMidiThread.start();
+	}
+
+	private void sendMidiDataInBackground() throws Exception {
+
+	}
+
+	private void searchDeviceBySendPacketData() throws Exception {
+		Thread sendingThread = new Thread(new Runnable() {
+			public void run() {
+				try {
+					sendData();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		sendingThread.start();
+		Thread getThread = new Thread(new Runnable() {
+			public void run() {
+				try {
+					getData();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		getThread.start();
+	}
+
+	private void sendData() throws Exception {
+		System.out.println("进入searchDeviceBySendPacketData方法");
+		byte[] sendBuffer = { 0x02, 0x00, 0x0A, 0x00, 0x00, 0x00, (byte) 0xF3,
+				(byte) 0xFF, (byte) 0xFF, (byte) 0xFF };
+		DatagramPacket sendPacket = new DatagramPacket(sendBuffer,
+				sendBuffer.length, new InetSocketAddress("255.255.255.255",
+						8089));
+		DatagramSocket sock = new DatagramSocket(8089);
+		System.out.println("ip is" + sendPacket.getAddress().toString());
+		sock.send(sendPacket);
+		System.out.println("send ok");
+
+		// mSearchShowTextView.setText("receive message:" + backMsg +
+		// "\ndevice id:" + getIp.toString());
+
+		sock.close();
+	}
+
+	private void getData() throws Exception {
+		DatagramSocket sock = new DatagramSocket(8089);
+		byte[] getBuffer = new byte[1024];
+		DatagramPacket getPacket = new DatagramPacket(getBuffer,
+				getBuffer.length);
+		sock.receive(getPacket);
+		InetAddress getIp = getPacket.getAddress();
+		StringBuffer getString = new StringBuffer("接受方返回的消息：");
+		for (int i = 0; i < getPacket.getLength(); i++) {
+			getString.append(" "
+					+ "0123456789ABCDEF".charAt(0xf & getBuffer[i] >> 4)
+					+ "0123456789ABCDEF".charAt(getBuffer[i] & 0xf));
+		}
+		System.out.println(getString);
+		System.out.println("设备ip" + getIp.toString());
+		sock.close();
 	}
 
 	private FirstTimeConfig firstConfig = null;
@@ -420,7 +534,8 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 	 */
 	private void showConnectionTimedOut(int dialogType) {
 		if (mDialogManager == null) {
-			mDialogManager = new EasyLinkDialogManager(EasyLinkConfigActivity.this);
+			mDialogManager = new EasyLinkDialogManager(
+					EasyLinkConfigActivity.this);
 		}
 		mDialogManager.showCustomAlertDialog(dialogType);
 	}
@@ -430,7 +545,8 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 	 */
 	private void showFailureAlert(int dialogType) {
 		if (mDialogManager == null) {
-			mDialogManager = new EasyLinkDialogManager(EasyLinkConfigActivity.this);
+			mDialogManager = new EasyLinkDialogManager(
+					EasyLinkConfigActivity.this);
 		}
 		mDialogManager.showCustomAlertDialog(dialogType);
 	}
@@ -441,7 +557,8 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 	 */
 	private void showConnectionSuccess(int dialogType) {
 		if (mDialogManager == null) {
-			mDialogManager = new EasyLinkDialogManager(EasyLinkConfigActivity.this);
+			mDialogManager = new EasyLinkDialogManager(
+					EasyLinkConfigActivity.this);
 		}
 		mDialogManager.showCustomAlertDialog(dialogType);
 	}
@@ -654,7 +771,8 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 			builder1 = new AlertDialog.Builder(this);
 			builder1.setCancelable(true)
 					.setTitle(
-							getResources().getString(R.string.alert_easylink_title))
+							getResources().getString(
+									R.string.alert_easylink_title))
 					.setMessage(
 							getResources().getString(
 									R.string.alert_no_network_title))
@@ -733,72 +851,72 @@ public class EasyLinkConfigActivity extends Activity implements OnClickListener,
 		}
 	};
 
-//	public class mDns extends Thread {
-//		DatagramSocket udpSocket;
-//		byte[] buffer = null;
-//
-//		public void run() {
-//			try {
-//				udpSocket = new DatagramSocket(5353,
-//						InetAddress.getByName("224.0.0.251"));
-//				DatagramPacket dpIn = null;
-//				byte[] bufferIn = new byte[256];
-//				dpIn = new DatagramPacket(bufferIn, bufferIn.length);
-//				while (flag) {
-//					udpSocket.receive(dpIn);
-//					if (dpIn.getLength() != 0) {
-//						if (parseMDns(dpIn.getData())) {
-//							stopPacketData();
-//							flag = false;
-//							udpSocket.close();
-//						} else
-//							return;
-//					}
-//					Thread.sleep(200);
-//				}
-//
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//
-//		}
-//	}
-//
-//	private boolean parseMDns(byte[] data) throws Exception {
-//		int MDNS_HEADER_SIZE = 12;
-//		int MDNS_HEADER_SIZE2 = 10;
-//
-//		int pos = 12;
-//
-//		if (data.length < pos + 1)
-//			return false;
-//		int len = data[pos] & 0xFF;
-//		pos++;
-//
-//		while (len > 0) {
-//			if (data.length < pos + len) {
-//				return false;
-//			}
-//			pos += len;
-//
-//			if (data.length < pos + 1)
-//				return false;
-//			len = data[pos] & 0xFF;
-//			pos++;
-//		}
-//
-//		pos += 10;
-//
-//		if (data.length < pos + 1)
-//			return false;
-//		len = data[pos] & 0xFF;
-//		pos++;
-//
-//		if (data.length < pos + len)
-//			return false;
-//		String name = new String(data, pos, len);
-//
-//		boolean bRet = name.equals("EMW3161");
-//		return bRet;
-//	}
+	// public class mDns extends Thread {
+	// DatagramSocket udpSocket;
+	// byte[] buffer = null;
+	//
+	// public void run() {
+	// try {
+	// udpSocket = new DatagramSocket(5353,
+	// InetAddress.getByName("224.0.0.251"));
+	// DatagramPacket dpIn = null;
+	// byte[] bufferIn = new byte[256];
+	// dpIn = new DatagramPacket(bufferIn, bufferIn.length);
+	// while (flag) {
+	// udpSocket.receive(dpIn);
+	// if (dpIn.getLength() != 0) {
+	// if (parseMDns(dpIn.getData())) {
+	// stopPacketData();
+	// flag = false;
+	// udpSocket.close();
+	// } else
+	// return;
+	// }
+	// Thread.sleep(200);
+	// }
+	//
+	// } catch (Exception e) {
+	// e.printStackTrace();
+	// }
+	//
+	// }
+	// }
+	//
+	// private boolean parseMDns(byte[] data) throws Exception {
+	// int MDNS_HEADER_SIZE = 12;
+	// int MDNS_HEADER_SIZE2 = 10;
+	//
+	// int pos = 12;
+	//
+	// if (data.length < pos + 1)
+	// return false;
+	// int len = data[pos] & 0xFF;
+	// pos++;
+	//
+	// while (len > 0) {
+	// if (data.length < pos + len) {
+	// return false;
+	// }
+	// pos += len;
+	//
+	// if (data.length < pos + 1)
+	// return false;
+	// len = data[pos] & 0xFF;
+	// pos++;
+	// }
+	//
+	// pos += 10;
+	//
+	// if (data.length < pos + 1)
+	// return false;
+	// len = data[pos] & 0xFF;
+	// pos++;
+	//
+	// if (data.length < pos + len)
+	// return false;
+	// String name = new String(data, pos, len);
+	//
+	// boolean bRet = name.equals("EMW3161");
+	// return bRet;
+	// }
 }

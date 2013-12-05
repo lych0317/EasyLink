@@ -15,7 +15,10 @@
 
     <string name="key_label">Key</string>
     <string name="devicename_label">Device Name</string>
+    <string name="search_show_label">Show Msg</string>
     <string name="start_label">Start</string>
+    <string name="search_label">Search</string>
+    <string name="send_label">Send MIDI</string>
     <string name="stop_label">Stop</string>
     <string name="back_label">Back</string>
     <string name="about_us_label">About Us</string>

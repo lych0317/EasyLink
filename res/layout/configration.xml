@@ -232,13 +232,16 @@
                 android:textSize="@dimen/rowitem_text_size" />
         </LinearLayout>
     </LinearLayout>
-
+	<LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/footer_height"
+        	android:layout_alignParentBottom="true"
+            android:orientation="vertical">
     <RelativeLayout
         android:id="@+id/relativeLayout1"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/config_footerview"
-        android:layout_below="@+id/cofig_topbarRootview"
         android:layout_marginLeft="@dimen/max_margin_size"
         android:layout_marginRight="@dimen/max_margin_size" >
 
@@ -264,7 +267,79 @@
             android:indeterminateDrawable="@drawable/progress_drawable" />
 
     </RelativeLayout>
+    
+    <RelativeLayout
+        android:id="@+id/relativeLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="@dimen/max_margin_size"
+        android:layout_marginRight="@dimen/max_margin_size" >
 
+       	<Button
+            android:id="@+id/config_search_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@drawable/btn_selector"
+            android:gravity="center"
+            android:minHeight="@dimen/header_height"
+            android:text="@string/search_label"
+            android:textColor="@color/white" />
+
+       	<ProgressBar
+            android:id="@+id/config_search_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:visibility="invisible"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="@dimen/min_margin_cutoff"
+            android:indeterminateDrawable="@drawable/progress_drawable" />
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/config_search_show_label"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="@dimen/min_margin_cutoff"
+        android:layout_weight="1"
+        android:text="@string/search_show_label"
+        android:textColor="@color/black"
+        android:textSize="@dimen/rowitem_text_size"
+        android:textStyle="bold"/>
+    
+    <RelativeLayout
+        android:id="@+id/relativeLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="@dimen/max_margin_size"
+        android:layout_marginRight="@dimen/max_margin_size" >
+
+       	<Button
+            android:id="@+id/config_send_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@drawable/btn_selector"
+            android:gravity="center"
+            android:minHeight="@dimen/header_height"
+            android:text="@string/send_label"
+            android:textColor="@color/white" />
+
+       	<ProgressBar
+            android:id="@+id/config_send_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:visibility="invisible"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="@dimen/min_margin_cutoff"
+            android:indeterminateDrawable="@drawable/progress_drawable" />
+
+    </RelativeLayout>
+    
     <RelativeLayout
         android:id="@+id/config_footerview"
         android:layout_width="match_parent"
@@ -288,5 +363,5 @@
             android:textStyle="bold" />
 
     </RelativeLayout>
-
+	</LinearLayout>
 </RelativeLayout>
